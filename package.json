@@ -1,0 +1,17 @@
+{
+  "name": "csg.ts",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "npm run build && npm run tests",
+    "test:watch": "concurrently npm:build:watch npm:tests:watch",
+    "tests": "node --test-reporter spec --test dist/test/",
+    "tests:watch": "node --test-reporter spec --watch --test dist/test/"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.9",
+    "concurrently": "^8.2.0",
+    "typescript": "^5.1.6"
+  }
+}
