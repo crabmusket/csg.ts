@@ -8,9 +8,9 @@
 // Example usage:
 // 
 //     import * as CSG from "./csg";
-//     var cube = CSG.cube();
-//     var sphere = CSG.sphere({ radius: 1.3 });
-//     var polygons = cube.subtract(sphere).toPolygons();
+//     const cube = CSG.cube();
+//     const sphere = CSG.sphere({ radius: 1.3 });
+//     const polygons = cube.subtract(sphere).toPolygons();
 // 
 // ## Implementation Details
 // 
@@ -60,7 +60,7 @@ export class CSG {
   }
 
   clone() {
-    var csg = new CSG();
+    const csg = new CSG();
     csg.polygons = this.polygons.map(function(p) { return p.clone(); });
     return csg;
   }
@@ -84,8 +84,8 @@ export class CSG {
   //          +-------+            +-------+
   // 
   union(csg: CSG): CSG {
-    var a = new Node(this.clone().polygons);
-    var b = new Node(csg.clone().polygons);
+    const a = new Node(this.clone().polygons);
+    const b = new Node(csg.clone().polygons);
     a.clipTo(b);
     b.clipTo(a);
     b.invert();
@@ -110,8 +110,8 @@ export class CSG {
   //          +-------+
   // 
   subtract(csg: CSG): CSG {
-    var a = new Node(this.clone().polygons);
-    var b = new Node(csg.clone().polygons);
+    const a = new Node(this.clone().polygons);
+    const b = new Node(csg.clone().polygons);
     a.invert();
     a.clipTo(b);
     b.clipTo(a);
@@ -138,8 +138,8 @@ export class CSG {
   //          +-------+
   // 
   intersect(csg: CSG): CSG {
-    var a = new Node(this.clone().polygons);
-    var b = new Node(csg.clone().polygons);
+    const a = new Node(this.clone().polygons);
+    const b = new Node(csg.clone().polygons);
     a.invert();
     b.clipTo(a);
     b.invert();
@@ -153,7 +153,7 @@ export class CSG {
   // Return a new CSG solid with solid and empty space switched. This solid is
   // not modified.
   inverse() {
-    var csg = this.clone();
+    const csg = this.clone();
     csg.polygons.map(function(p) { p.flip(); });
     return csg;
   }
@@ -165,7 +165,7 @@ export class CSG {
 // 
 // Example code:
 // 
-//     var cube = CSG.cube({
+//     const cube = CSG.cube({
 //       center: [0, 0, 0],
 //       radius: 1
 //     });
@@ -174,8 +174,8 @@ export function cube(options: {
   radius?: number | [number, number, number];
 }) {
   options = options || {};
-  var c = new Vector(options.center || [0, 0, 0]);
-  var r = !options.radius ? [1, 1, 1] : (options.radius as any).length ?
+  const c = new Vector(options.center || [0, 0, 0]);
+  const r = !options.radius ? [1, 1, 1] : (options.radius as any).length ?
            (options.radius as [number, number, number])
            : [options.radius as number, options.radius as number, options.radius as number];
   return CSG.fromPolygons([
@@ -187,7 +187,7 @@ export function cube(options: {
     [[4, 5, 7, 6], [0, 0, +1]]
   ].map(function(info) {
     return new Polygon(info[0].map(function(i) {
-      var pos = new Vector(
+      const pos = new Vector(
         c.x + r[0] * (2 * Number(!!(i & 1)) - 1),
         c.y + r[1] * (2 * Number(!!(i & 2)) - 1),
         c.z + r[2] * (2 * Number(!!(i & 4)) - 1)
@@ -204,7 +204,7 @@ export function cube(options: {
 // 
 // Example usage:
 // 
-//     var sphere = CSG.sphere({
+//     const sphere = CSG.sphere({
 //       center: [0, 0, 0],
 //       radius: 1,
 //       slices: 16,
@@ -217,23 +217,24 @@ export function sphere(options: {
   stacks?: number;
 }) {
   options = options || {};
-  var c = new Vector(options.center || [0, 0, 0]);
-  var r = options.radius || 1;
-  var slices = options.slices || 16;
-  var stacks = options.stacks || 8;
-  var polygons: Polygon[] = [], vertices: Vertex[] = [];
+  const c = new Vector(options.center || [0, 0, 0]);
+  const r = options.radius || 1;
+  const slices = options.slices || 16;
+  const stacks = options.stacks || 8;
+  const polygons: Polygon[] = [];
+  let vertices: Vertex[] = [];
   function vertex(theta: number, phi: number) {
     theta *= Math.PI * 2;
     phi *= Math.PI;
-    var dir = new Vector(
+    const dir = new Vector(
       Math.cos(theta) * Math.sin(phi),
       Math.cos(phi),
       Math.sin(theta) * Math.sin(phi)
     );
     vertices.push(new Vertex(c.plus(dir.times(r)), dir));
   }
-  for (var i = 0; i < slices; i++) {
-    for (var j = 0; j < stacks; j++) {
+  for (let i = 0; i < slices; i++) {
+    for (let j = 0; j < stacks; j++) {
       vertices = [];
       vertex(i / slices, j / stacks);
       if (j > 0) vertex((i + 1) / slices, j / stacks);
@@ -251,7 +252,7 @@ export function sphere(options: {
 // 
 // Example usage:
 // 
-//     var cylinder = CSG.cylinder({
+//     const cylinder = CSG.cylinder({
 //       start: [0, -1, 0],
 //       end: [0, 1, 0],
 //       radius: 1,
@@ -264,26 +265,26 @@ export function cylinder(options: {
   slices?: number;
 }) {
   options = options || {};
-  var s = new Vector(options.start || [0, -1, 0]);
-  var e = new Vector(options.end || [0, 1, 0]);
-  var ray = e.minus(s);
-  var r = options.radius || 1;
-  var slices = options.slices || 16;
-  var axisZ = ray.unit(), isY = (Math.abs(axisZ.y) > 0.5);
-  var axisX = new Vector(Number(isY), Number(!isY), 0).cross(axisZ).unit();
-  var axisY = axisX.cross(axisZ).unit();
-  var start = new Vertex(s, axisZ.negated());
-  var end = new Vertex(e, axisZ.unit());
-  var polygons = [];
+  const s = new Vector(options.start || [0, -1, 0]);
+  const e = new Vector(options.end || [0, 1, 0]);
+  const ray = e.minus(s);
+  const r = options.radius || 1;
+  const slices = options.slices || 16;
+  const axisZ = ray.unit(), isY = (Math.abs(axisZ.y) > 0.5);
+  const axisX = new Vector(Number(isY), Number(!isY), 0).cross(axisZ).unit();
+  const axisY = axisX.cross(axisZ).unit();
+  const start = new Vertex(s, axisZ.negated());
+  const end = new Vertex(e, axisZ.unit());
+  const polygons = [];
   function point(stack: number, slice: number, normalBlend: number) {
-    var angle = slice * Math.PI * 2;
-    var out = axisX.times(Math.cos(angle)).plus(axisY.times(Math.sin(angle)));
-    var pos = s.plus(ray.times(stack)).plus(out.times(r));
-    var normal = out.times(1 - Math.abs(normalBlend)).plus(axisZ.times(normalBlend));
+    const angle = slice * Math.PI * 2;
+    const out = axisX.times(Math.cos(angle)).plus(axisY.times(Math.sin(angle)));
+    const pos = s.plus(ray.times(stack)).plus(out.times(r));
+    const normal = out.times(1 - Math.abs(normalBlend)).plus(axisZ.times(normalBlend));
     return new Vertex(pos, normal);
   }
-  for (var i = 0; i < slices; i++) {
-    var t0 = i / slices, t1 = (i + 1) / slices;
+  for (let i = 0; i < slices; i++) {
+    const t0 = i / slices, t1 = (i + 1) / slices;
     polygons.push(new Polygon([start, point(0, t0, -1), point(0, t1, -1)]));
     polygons.push(new Polygon([point(0, t1, 0), point(0, t0, 0), point(1, t0, 0), point(1, t1, 0)]));
     polygons.push(new Polygon([end, point(1, t1, 1), point(1, t0, 1)]));
@@ -439,7 +440,7 @@ export class Plane {
   static EPSILON = 1e-5;
 
   static fromPoints(a: Vector, b: Vector, c: Vector): Plane {
-    var n = b.minus(a).cross(c.minus(a)).unit();
+    const n = b.minus(a).cross(c.minus(a)).unit();
     return new Plane(n, n.dot(a));
   }
 
@@ -458,18 +459,18 @@ export class Plane {
   // respect to this plane. Polygons in front or in back of this plane go into
   // either `front` or `back`.
   splitPolygon(polygon: Polygon, coplanarFront: Polygon[], coplanarBack: Polygon[], front: Polygon[], back: Polygon[]): void {
-    var COPLANAR = 0;
-    var FRONT = 1;
-    var BACK = 2;
-    var SPANNING = 3;
+    const COPLANAR = 0;
+    const FRONT = 1;
+    const BACK = 2;
+    const SPANNING = 3;
 
     // Classify each point as well as the entire polygon into one of the above
     // four classes.
-    var polygonType = 0;
-    var types = [];
-    for (var i = 0; i < polygon.vertices.length; i++) {
-      var t = this.normal.dot(polygon.vertices[i].pos) - this.w;
-      var type = (t < -Plane.EPSILON) ? BACK : (t > Plane.EPSILON) ? FRONT : COPLANAR;
+    let polygonType = 0;
+    const types = [];
+    for (let i = 0; i < polygon.vertices.length; i++) {
+      const t = this.normal.dot(polygon.vertices[i].pos) - this.w;
+      const type = (t < -Plane.EPSILON) ? BACK : (t > Plane.EPSILON) ? FRONT : COPLANAR;
       polygonType |= type;
       types.push(type);
     }
@@ -486,16 +487,16 @@ export class Plane {
         back.push(polygon);
         break;
       case SPANNING:
-        var f = [], b = [];
-        for (var i = 0; i < polygon.vertices.length; i++) {
-          var j = (i + 1) % polygon.vertices.length;
-          var ti = types[i], tj = types[j];
-          var vi = polygon.vertices[i], vj = polygon.vertices[j];
+        const f = [], b = [];
+        for (let i = 0; i < polygon.vertices.length; i++) {
+          const j = (i + 1) % polygon.vertices.length;
+          const ti = types[i], tj = types[j];
+          const vi = polygon.vertices[i], vj = polygon.vertices[j];
           if (ti != BACK) f.push(vi);
           if (ti != FRONT) b.push(ti != BACK ? vi.clone() : vi);
           if ((ti | tj) == SPANNING) {
-            var t = (this.w - this.normal.dot(vi.pos)) / this.normal.dot(vj.pos.minus(vi.pos));
-            var v = vi.interpolate(vj, t);
+            const t = (this.w - this.normal.dot(vi.pos)) / this.normal.dot(vj.pos.minus(vi.pos));
+            const v = vi.interpolate(vj, t);
             f.push(v);
             b.push(v.clone());
           }
@@ -530,7 +531,7 @@ export class Polygon {
   }
 
   clone() {
-    var vertices = this.vertices.map(function(v) { return v.clone(); });
+    const vertices = this.vertices.map(function(v) { return v.clone(); });
     return new Polygon(vertices, this.shared);
   }
 
@@ -563,7 +564,7 @@ export class Node {
   }
 
   clone() {
-    var node = new Node();
+    const node = new Node();
     node.plane = this.plane && this.plane.clone();
     node.front = this.front && this.front.clone();
     node.back = this.back && this.back.clone();
@@ -573,13 +574,13 @@ export class Node {
 
   // Convert solid space to empty space and empty space to solid space.
   invert() {
-    for (var i = 0; i < this.polygons.length; i++) {
+    for (let i = 0; i < this.polygons.length; i++) {
       this.polygons[i].flip();
     }
     this.plane!.flip();
     if (this.front) this.front.invert();
     if (this.back) this.back.invert();
-    var temp = this.front;
+    const temp = this.front;
     this.front = this.back;
     this.back = temp;
   }
@@ -588,8 +589,8 @@ export class Node {
   // tree.
   clipPolygons(polygons: Polygon[]): Polygon[] {
     if (!this.plane) return polygons.slice();
-    var front: Polygon[] = [], back: Polygon[] = [];
-    for (var i = 0; i < polygons.length; i++) {
+    let front: Polygon[] = [], back: Polygon[] = [];
+    for (let i = 0; i < polygons.length; i++) {
       this.plane.splitPolygon(polygons[i], front, back, front, back);
     }
     if (this.front) front = this.front.clipPolygons(front);
@@ -608,7 +609,7 @@ export class Node {
 
   // Return a list of all polygons in this BSP tree.
   allPolygons(): Polygon[] {
-    var polygons = this.polygons.slice();
+    let polygons = this.polygons.slice();
     if (this.front) polygons = polygons.concat(this.front.allPolygons());
     if (this.back) polygons = polygons.concat(this.back.allPolygons());
     return polygons;
@@ -621,8 +622,8 @@ export class Node {
   build(polygons: Polygon[]) {
     if (!polygons.length) return;
     if (!this.plane) this.plane = polygons[0].plane.clone();
-    var front: Polygon[] = [], back: Polygon[] = [];
-    for (var i = 0; i < polygons.length; i++) {
+    const front: Polygon[] = [], back: Polygon[] = [];
+    for (let i = 0; i < polygons.length; i++) {
       this.plane.splitPolygon(polygons[i], this.polygons, this.polygons, front, back);
     }
     if (front.length) {
