@@ -3,6 +3,7 @@
     "compilerOptions": {
         "esModuleInterop": true,
         "outDir": "dist",
+        "sourceMap": true,
         "strict": true,
         "types": ["node"]
     }
