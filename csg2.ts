@@ -51,30 +51,33 @@
 // - Remove polymorphism in arguments, in favour of separate functions for different
 //   argument types.
 // - Remove methods in favour of free functions.
+// - Add generic type S to world for typed shared data.
 //
 // Copyright (c) 2023 Daniel Buckmaster (https://crabmusket.net/), under the MIT license.
 
 /**
  * Holds a binary space partition tree representing a 3D solid. Two solids can
  * be combined using the `union()`, `subtract()`, and `intersect()` methods.
+ *
+ * The type parameter S is the shared data that each polygon in the solid may carry.
  */
-export class Solid {
-  polygons: Polygon[] = [];
+export class Solid<S = unknown> {
+  polygons: Polygon<S>[] = [];
 
   /** Construct a solid from a list of `CSG.Polygon` instances. */
-  static fromPolygons(polygons: Polygon[]): Solid {
-    const csg = new Solid();
+  static fromPolygons<T>(polygons: Polygon<T>[]): Solid<T> {
+    const csg = new Solid<T>();
     csg.polygons = polygons;
     return csg;
   }
 
-  clone(): Solid {
+  clone(): Solid<S> {
     return Solid.fromPolygons(
       this.polygons.map(p => p.clone())
     );
   }
 
-  toPolygons(): Polygon[] {
+  toPolygons(): Polygon<S>[] {
     return this.polygons;
   }
 
@@ -82,7 +85,7 @@ export class Solid {
    * Return a new solid with solid and empty space switched. This solid is
    * not modified.
    */
-  inverse(): Solid {
+  inverse(): Solid<S> {
     const csg = this.clone();
     csg.polygons.map(function(p) { p.flip(); });
     return csg;
@@ -481,7 +484,7 @@ export class Plane {
    * respect to this plane. Polygons in front or in back of this plane go into
    * either `front` or `back`.
    */
-  splitPolygon(polygon: Polygon, coplanarFront: Polygon[], coplanarBack: Polygon[], front: Polygon[], back: Polygon[]): void {
+  splitPolygon<T>(polygon: Polygon<T>, coplanarFront: Polygon<T>[], coplanarBack: Polygon<T>[], front: Polygon<T>[], back: Polygon[]): void {
     const COPLANAR = 0;
     const FRONT = 1;
     const BACK = 2;
@@ -541,12 +544,12 @@ export class Plane {
  * polygons that are clones of each other or were split from the same polygon.
  * This can be used to define per-polygon properties (such as surface color).
  */
-export class Polygon {
+export class Polygon<S = unknown> {
   vertices: Vertex[];
-  shared: unknown;
+  shared: S | undefined;
   plane: Plane;
 
-  constructor(vertices: Vertex[], shared?: unknown) {
+  constructor(vertices: Vertex[], shared?: S) {
     this.vertices = vertices;
     this.shared = shared;
     this.plane = Plane.fromPoints(vertices[0].pos, vertices[1].pos, vertices[2].pos);
@@ -570,13 +573,13 @@ export class Polygon {
  * the front and/or back subtrees. This is not a leafy BSP tree since there is
  * no distinction between internal and leaf nodes.
  */
-export class Node {
+export class Node<S = unknown> {
   plane: Plane | null;
-  front: Node | null;
-  back: Node | null;
-  polygons: Polygon[] = [];
+  front: Node<S> | null;
+  back: Node<S> | null;
+  polygons: Polygon<S>[] = [];
 
-  constructor(polygons?: Polygon[]) {
+  constructor(polygons?: Polygon<S>[]) {
     this.plane = null;
     this.front = null;
     this.back = null;
@@ -584,8 +587,8 @@ export class Node {
     if (polygons) this.build(polygons);
   }
 
-  clone() {
-    const node = new Node();
+  clone(): Node<S> {
+    const node = new Node<S>();
     node.plane = this.plane && this.plane.clone();
     node.front = this.front && this.front.clone();
     node.back = this.back && this.back.clone();
@@ -607,9 +610,9 @@ export class Node {
   }
 
   /** Recursively remove all polygons in `polygons` that are inside this BSP tree. */
-  clipPolygons(polygons: Polygon[]): Polygon[] {
+  clipPolygons<T>(polygons: Polygon<T>[]): Polygon<T>[] {
     if (!this.plane) return polygons.slice();
-    let front: Polygon[] = [], back: Polygon[] = [];
+    let front: Polygon<T>[] = [], back: Polygon<T>[] = [];
     for (let i = 0; i < polygons.length; i++) {
       this.plane.splitPolygon(polygons[i], front, back, front, back);
     }
@@ -627,7 +630,7 @@ export class Node {
   }
 
   /** Return a list of all polygons in this BSP tree. */
-  allPolygons(): Polygon[] {
+  allPolygons(): Polygon<S>[] {
     let polygons = this.polygons.slice();
     if (this.front) polygons = polygons.concat(this.front.allPolygons());
     if (this.back) polygons = polygons.concat(this.back.allPolygons());
@@ -640,19 +643,19 @@ export class Node {
    * nodes there. Each set of polygons is partitioned using the first polygon
    * (no heuristic is used to pick a good split).
    */
-  build(polygons: Polygon[]) {
+  build(polygons: Polygon<S>[]) {
     if (!polygons.length) return;
     if (!this.plane) this.plane = polygons[0].plane.clone();
-    const front: Polygon[] = [], back: Polygon[] = [];
+    const front: Polygon<S>[] = [], back: Polygon<S>[] = [];
     for (let i = 0; i < polygons.length; i++) {
       this.plane.splitPolygon(polygons[i], this.polygons, this.polygons, front, back);
     }
     if (front.length) {
-      if (!this.front) this.front = new Node();
+      if (!this.front) this.front = new Node<S>();
       this.front.build(front);
     }
     if (back.length) {
-      if (!this.back) this.back = new Node();
+      if (!this.back) this.back = new Node<S>();
       this.back.build(back);
     }
   }
