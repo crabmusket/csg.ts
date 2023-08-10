@@ -84,15 +84,7 @@ export class CSG {
   //          +-------+            +-------+
   // 
   union(csg: CSG): CSG {
-    const a = new Node(this.clone().polygons);
-    const b = new Node(csg.clone().polygons);
-    a.clipTo(b);
-    b.clipTo(a);
-    b.invert();
-    b.clipTo(a);
-    b.invert();
-    a.build(b.allPolygons());
-    return CSG.fromPolygons(a.allPolygons());
+    return union(this, csg);
   }
 
   // Return a new CSG solid representing space in this solid but not in the
@@ -110,17 +102,7 @@ export class CSG {
   //          +-------+
   // 
   subtract(csg: CSG): CSG {
-    const a = new Node(this.clone().polygons);
-    const b = new Node(csg.clone().polygons);
-    a.invert();
-    a.clipTo(b);
-    b.clipTo(a);
-    b.invert();
-    b.clipTo(a);
-    b.invert();
-    a.build(b.allPolygons());
-    a.invert();
-    return CSG.fromPolygons(a.allPolygons());
+    return subtract(this, csg);
   }
 
   // Return a new CSG solid representing space both this solid and in the
@@ -138,16 +120,7 @@ export class CSG {
   //          +-------+
   // 
   intersect(csg: CSG): CSG {
-    const a = new Node(this.clone().polygons);
-    const b = new Node(csg.clone().polygons);
-    a.invert();
-    b.clipTo(a);
-    b.invert();
-    a.clipTo(b);
-    b.clipTo(a);
-    a.build(b.allPolygons());
-    a.invert();
-    return CSG.fromPolygons(a.allPolygons());
+    return intersect(this, csg);
   }
 
   // Return a new CSG solid with solid and empty space switched. This solid is
@@ -157,6 +130,48 @@ export class CSG {
     csg.polygons.map(function(p) { p.flip(); });
     return csg;
   }
+}
+
+/** Create a new solid which is the union of A and B. */
+export function union(A: CSG, B: CSG): CSG {
+  const a = new Node(A.clone().polygons);
+  const b = new Node(B.clone().polygons);
+  a.clipTo(b);
+  b.clipTo(a);
+  b.invert();
+  b.clipTo(a);
+  b.invert();
+  a.build(b.allPolygons());
+  return CSG.fromPolygons(a.allPolygons());
+}
+
+/** Create a new solid which is A with B subtracted from it. */
+export function subtract(A: CSG, B: CSG): CSG {
+  const a = new Node(A.clone().polygons);
+  const b = new Node(B.clone().polygons);
+  a.invert();
+  a.clipTo(b);
+  b.clipTo(a);
+  b.invert();
+  b.clipTo(a);
+  b.invert();
+  a.build(b.allPolygons());
+  a.invert();
+  return CSG.fromPolygons(a.allPolygons());
+}
+
+/** Create a new solid which is the intersection between A and B. */
+export function intersect(A: CSG, B: CSG): CSG {
+  const a = new Node(A.clone().polygons);
+  const b = new Node(B.clone().polygons);
+  a.invert();
+  b.clipTo(a);
+  b.invert();
+  a.clipTo(b);
+  b.clipTo(a);
+  a.build(b.allPolygons());
+  a.invert();
+  return CSG.fromPolygons(a.allPolygons());
 }
 
 // Construct an axis-aligned solid cuboid. Optional parameters are `center` and
