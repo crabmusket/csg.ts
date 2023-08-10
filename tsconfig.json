@@ -1,5 +1,5 @@
 {
-    "include": ["./csg.ts", "./test/*.ts"],
+    "include": ["./csg.ts", "./csg2.ts", "./test/*.ts"],
     "compilerOptions": {
         "esModuleInterop": true,
         "outDir": "dist",
