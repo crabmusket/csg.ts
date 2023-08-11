@@ -11,7 +11,7 @@
 //     const cube = CSG.cube();
 //     const sphere = CSG.sphere({ radius: 1.3 });
 //     const polygons = cube.subtract(sphere).toPolygons();
-// 
+//
 // ## Implementation Details
 // 
 // All CSG operations are implemented in terms of two functions, `clipTo()` and
