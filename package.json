@@ -2,8 +2,10 @@
   "name": "csg.ts",
   "version": "1.0.0",
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "build": "rm -rf dist/ && tsc",
+    "build:watch": "rm -rf dist/ && tsc --watch",
+    "benchmark": "npm run build && npm run benchmarks",
+    "benchmarks": "for f in dist/test/*.bench.js; do node \"$f\"; done",
     "test": "npm run build && npm run tests",
     "test:watch": "concurrently npm:build:watch npm:tests:watch",
     "tests": "node --enable-source-maps --test-reporter spec --test dist/test/",
