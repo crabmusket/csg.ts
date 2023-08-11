@@ -660,3 +660,11 @@ export class Node<S = unknown> {
     }
   }
 }
+
+// For the human mind, the tree is the easiest vehicle for complex thoughts. But the
+// city is not, cannot and must not be a tree. The city is a receptacle for life.
+// If the receptacle severs the overlap of the strands of life within it, because it
+// is a tree, it will be like a bowl full of razor blades on edge, ready to cut up
+// whatever is entrusted to it. In such a receptacle life will be cut to pieces. If
+// we make cities which are trees, they will cut our life within to pieces.
+// Christopher Alexander, "A City Is Not A Tree"
