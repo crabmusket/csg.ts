@@ -195,9 +195,9 @@ export function cube(options: {
   options = options || {};
   const c = new Vector(...options.center || [0, 0, 0]);
   const r = !options.radius ? [1, 1, 1] : (
-    (options.radius as any).length
-      ? (options.radius as [number, number, number])
-      : [options.radius as number, options.radius as number, options.radius as number]
+    (typeof options.radius === "number")
+      ? [options.radius, options.radius, options.radius]
+      : options.radius
   );
   return Solid.fromPolygons([
     [[0, 4, 6, 2], [-1, 0, 0]],
