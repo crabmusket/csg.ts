@@ -64,7 +64,7 @@
 export class Solid<S = unknown> {
   polygons: Polygon<S>[] = [];
 
-  /** Construct a solid from a list of `CSG.Polygon` instances. */
+  /** Construct a solid from a list of `Polygon` instances. */
   static fromPolygons<T>(polygons: Polygon<T>[]): Solid<T> {
     const csg = new Solid<T>();
     csg.polygons = polygons;
